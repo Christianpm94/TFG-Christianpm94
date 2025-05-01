@@ -50,3 +50,10 @@
 
 # Embedded web-server pid file
 /.web-server-pid
+
+# Angular / Node.js
+node_modules/
+dist/
+.angular/
+.env
+.env.*.local
