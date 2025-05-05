@@ -1,59 +1,56 @@
-# Cache and logs (Symfony2)
-/app/cache/*
-/app/logs/*
-!app/cache/.gitkeep
-!app/logs/.gitkeep
+# ===========================
+# Symfony (en /backend)
+# ===========================
 
-# Email spool folder
-/app/spool/*
+# Cache y logs
+backend/var/cache/
+backend/var/log/
+backend/var/sessions/
+!backend/var/cache/.gitkeep
+!backend/var/log/.gitkeep
+!backend/var/sessions/.gitkeep
 
-# Cache, session files and logs (Symfony3)
-/var/cache/*
-/var/logs/*
-/var/sessions/*
-!var/cache/.gitkeep
-!var/logs/.gitkeep
-!var/sessions/.gitkeep
+# Vendor y binarios
+backend/vendor/
+backend/bin/
+!backend/bin/console
 
-# Logs (Symfony4)
-/var/log/*
-!var/log/.gitkeep
+# Archivos sensibles
+backend/.env
+backend/.env.*.local
+backend/app/config/parameters.yml
+backend/app/config/parameters.ini
 
-# Parameters
-/app/config/parameters.yml
-/app/config/parameters.ini
-
-# Managed by Composer
-/app/bootstrap.php.cache
-/var/bootstrap.php.cache
-/bin/*
-!bin/console
-!bin/symfony_requirements
-/vendor/
-
-# Assets and user uploads
-/web/bundles/
-/web/uploads/
+# Recursos y subidas
+backend/web/uploads/
+backend/web/bundles/
 
 # PHPUnit
-/app/phpunit.xml
-/phpunit.xml
+backend/phpunit.xml
+backend/app/phpunit.xml
 
-# Build data
-/build/
-
-# Composer PHAR
-/composer.phar
-
-# Backup entities generated with doctrine:generate:entities command
+# Archivos de respaldo
 **/Entity/*~
 
-# Embedded web-server pid file
+# Embedded server
 /.web-server-pid
 
-# Angular / Node.js
-node_modules/
-dist/
-.angular/
-.env
-.env.*.local
+# ===========================
+# Angular / Node.js (en /frontend)
+# ===========================
+
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/.env
+frontend/.env.*.local
+
+# ===========================
+# General
+# ===========================
+
+.DS_Store
+*.log
+*.cache
+/build/
+/composer.phar
