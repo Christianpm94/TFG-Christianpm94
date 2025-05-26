@@ -1,0 +1,8 @@
+controllers:
+    resource: '../src/Controller/'
+    type: annotation
+
+login:
+    path: /login
+    methods: [POST]
+

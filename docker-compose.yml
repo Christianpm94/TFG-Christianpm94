@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  ### 🐘 PostgreSQL - Base de datos ###
+  database:
+    image: postgres:16-alpine
+    container_name: tfg_db
+    environment:
+      POSTGRES_DB: tfg_db
+      POSTGRES_USER: tfg_user
+      POSTGRES_PASSWORD: secret123
+    ports:
+      - "5432:5432"
+    volumes:
+      - database_data:/var/lib/postgresql/data
+
+  ### 🧠 Symfony - Backend PHP ###
+  app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tfg_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      - database
+
+volumes:
+  database_data:
+
