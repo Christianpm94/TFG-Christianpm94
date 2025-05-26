@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  ### 🐘 PostgreSQL - Base de datos ###
   database:
     image: postgres:16-alpine
     container_name: tfg_db
@@ -14,7 +13,6 @@ services:
     volumes:
       - database_data:/var/lib/postgresql/data
 
-  ### 🧠 Symfony - Backend PHP ###
   app:
     build:
       context: ./backend
@@ -27,6 +25,15 @@ services:
     depends_on:
       - database
 
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "4200:80"
+    volumes:
+      - ./frontend:/app
+    depends_on:
+      - app
+
 volumes:
   database_data:
-
