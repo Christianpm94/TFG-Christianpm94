@@ -1,1 +1,18 @@
-<p>create-match works!</p>
+<div class="max-w-lg mx-auto mt-10 p-6 bg-white shadow rounded">
+  <h2 class="text-2xl font-bold mb-4">Crear Partido</h2>
+  <form>
+    <label class="block mb-2">Tipo de Fútbol</label>
+    <select class="w-full p-2 border rounded mb-4">
+      <option>Fútbol Sala (Parqué)</option>
+      <option>Fútbol 7 (Césped)</option>
+      <option>Fútbol 11 (Césped)</option>
+    </select>
+    <label class="block mb-2">Localización</label>
+    <input type="text" class="w-full p-2 border rounded mb-4" />
+    <label class="block mb-2">Fecha y hora</label>
+    <input type="datetime-local" class="w-full p-2 border rounded mb-4" />
+    <label class="block mb-2">¿Partido privado?</label>
+    <input type="checkbox" />
+    <button class="mt-4 w-full bg-emerald-600 text-white p-2 rounded hover:bg-emerald-700">Crear</button>
+  </form>
+</div>
