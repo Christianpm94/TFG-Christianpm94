@@ -1,38 +1,24 @@
-<div class="max-w-xl mx-auto mt-10 p-6 bg-white shadow-xl rounded-2xl">
-  <h2 class="text-2xl font-bold mb-6 text-center text-emerald-700">Crear Partido</h2>
+<div class="max-w-lg mx-auto mt-10 p-6 bg-white shadow rounded">
+  <h2 class="text-2xl font-bold mb-4">Crear Partido</h2>
+  <form [formGroup]="matchForm" (ngSubmit)="onSubmit()">
+    <label class="block mb-2">Tipo de Fútbol</label>
+    <select formControlName="type" class="w-full p-2 border rounded mb-4">
+      <option value="Fútbol Sala (Parqué)">Fútbol Sala (Parqué)</option>
+      <option value="Fútbol 7 (Césped)">Fútbol 7 (Césped)</option>
+      <option value="Fútbol 11 (Césped)">Fútbol 11 (Césped)</option>
+    </select>
 
-  <form class="space-y-4">
-    <!-- Tipo de fútbol -->
-    <div>
-      <label class="block mb-1 font-medium">Tipo de Fútbol</label>
-      <select class="w-full p-2 border border-gray-300 rounded" name="type">
-        <option value="futsal">Fútbol Sala (Parqué)</option>
-        <option value="f7">Fútbol 7 (Césped)</option>
-        <option value="f11">Fútbol 11 (Césped)</option>
-      </select>
-    </div>
+    <label class="block mb-2">Localización</label>
+    <input formControlName="location" type="text" class="w-full p-2 border rounded mb-4" />
 
-    <!-- Localización -->
-    <div>
-      <label class="block mb-1 font-medium">Localización</label>
-      <input type="text" class="w-full p-2 border border-gray-300 rounded" name="location" placeholder="Ej. Polideportivo Municipal" />
-    </div>
+    <label class="block mb-2">Fecha y hora</label>
+    <input formControlName="datetime" type="datetime-local" class="w-full p-2 border rounded mb-4" />
 
-    <!-- Fecha y hora -->
-    <div>
-      <label class="block mb-1 font-medium">Fecha y Hora</label>
-      <input type="datetime-local" class="w-full p-2 border border-gray-300 rounded" name="datetime" />
-    </div>
+    <label class="block mb-2">¿Partido privado?</label>
+    <input formControlName="isPrivate" type="checkbox" />
 
-    <!-- Partido privado -->
-    <div class="flex items-center gap-2">
-      <input type="checkbox" name="isPrivate" id="private" />
-      <label for="private" class="font-medium">¿Partido privado?</label>
-    </div>
-
-    <!-- Botón -->
-    <button type="submit" class="w-full bg-emerald-600 text-white font-semibold py-2 rounded hover:bg-emerald-700 transition">
-      Crear Partido
+    <button type="submit" class="mt-4 w-full bg-emerald-600 text-white p-2 rounded hover:bg-emerald-700">
+      Crear
     </button>
   </form>
 </div>
