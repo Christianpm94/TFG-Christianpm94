@@ -1,12 +1,19 @@
-<div class="max-w-xl mx-auto mt-10 p-6 bg-white shadow rounded">
+<div class="max-w-xl mx-auto mt-10 p-6 bg-white shadow rounded" *ngIf="match">
   <h2 class="text-2xl font-bold mb-4">Detalle del Partido</h2>
-  <p class="text-gray-700">Tipo: <span class="font-semibold">Fútbol 7</span></p>
-  <p class="text-gray-700">Lugar: <span class="font-semibold">Campo Municipal</span></p>
-  <p class="text-gray-700">Fecha: <span class="font-semibold">2025-06-01 18:00</span></p>
 
-  <div class="mt-6">
-    <label class="block mb-2">Código de acceso (si es privado)</label>
-    <input type="text" class="w-full p-2 border rounded mb-4" />
-    <button class="w-full bg-indigo-600 text-white p-2 rounded hover:bg-indigo-700">Unirse al Partido</button>
+  <p class="text-gray-700">Tipo: <span class="font-semibold">{{ match.type }}</span></p>
+  <p class="text-gray-700">Lugar: <span class="font-semibold">{{ match.location }}</span></p>
+  <p class="text-gray-700">Fecha: <span class="font-semibold">{{ match.date | date:'medium' }}</span></p>
+
+  <!-- Formulario visible solo si el partido es privado -->
+  <div class="mt-6" *ngIf="match.private">
+    <label class="block mb-2">Código de acceso (privado)</label>
+    <input [(ngModel)]="accessCode" type="text" class="w-full p-2 border rounded mb-4" />
+    <button (click)="joinMatch()" class="w-full bg-indigo-600 text-white p-2 rounded hover:bg-indigo-700">
+      Unirse al Partido
+    </button>
   </div>
 </div>
+
+<!-- Mensaje de error si no se pudo cargar el partido -->
+<div *ngIf="errorMessage" class="text-red-600 text-center mt-6">{{ errorMessage }}</div>

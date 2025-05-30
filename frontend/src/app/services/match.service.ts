@@ -24,4 +24,9 @@ export class MatchService {
   getAllMatches(): Observable<any[]> {
     return this.http.get<any[]>(this.apiUrl);
   }
+
+  joinMatch(matchId: number, code?: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${matchId}/join`, { code });
+  }
+
 }
