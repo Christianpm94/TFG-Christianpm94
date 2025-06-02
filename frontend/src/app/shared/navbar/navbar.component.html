@@ -1,9 +1,19 @@
-<nav class="bg-green-700 text-white p-4 flex justify-between items-center shadow">
-  <div class="text-2xl font-bold tracking-wide">⚽ Football App</div>
-  <div class="space-x-6 text-sm sm:text-base">
-    <a routerLink="/" routerLinkActive="font-semibold underline">Inicio</a>
-    <a routerLink="/login" routerLinkActive="font-semibold underline">Iniciar sesión</a>
-    <a routerLink="/register" routerLinkActive="font-semibold underline">Registrarse</a>
-    <a routerLink="/create-match" routerLinkActive="font-semibold underline">Crear partido</a>
+<nav class="bg-[url('/cesped.png')] bg-cover text-white p-4 flex justify-between items-center shadow-md">
+  <div class="text-2xl font-extrabold tracking-wide drop-shadow-md font-[sans-serif]">
+    ⚽ Football App
+  </div>
+
+  <div class="space-x-4 flex items-center" *ngIf="!user">
+    <a routerLink="/" routerLinkActive="underline" class="hover:underline">Inicio</a>
+    <a routerLink="/login" routerLinkActive="underline" class="hover:underline">Iniciar sesión</a>
+    <a routerLink="/register" routerLinkActive="underline" class="hover:underline">Registrarse</a>
+  </div>
+
+  <div class="space-x-4 flex items-center" *ngIf="user">
+    <span class="font-semibold drop-shadow-md">👤 {{ user.name }} ({{ user.position }})</span>
+    <a routerLink="/create-match" class="hover:underline">Crear partido</a>
+    <button (click)="logout()" class="bg-white text-green-800 font-bold px-3 py-1 rounded hover:bg-gray-200">
+      Cerrar sesión
+    </button>
   </div>
 </nav>
