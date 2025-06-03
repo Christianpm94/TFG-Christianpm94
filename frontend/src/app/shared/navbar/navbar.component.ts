@@ -1,11 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
+import { CommonModule } from '@angular/common'; // Para directivas como *ngIf
+import { RouterModule } from '@angular/router'; // Para routerLink y routerLinkActive
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
   templateUrl: './navbar.component.html',
-  styleUrls: []
+  styleUrls: [],
+  imports: [CommonModule, RouterModule] // <-- IMPORTANTE
 })
 export class NavbarComponent implements OnInit {
   user: any = null;
@@ -13,8 +16,8 @@ export class NavbarComponent implements OnInit {
   constructor(private authService: AuthService) {}
 
   ngOnInit(): void {
-    const token =this.authService.getToken();
-    if (this.authService.getToken()) {
+    const token = this.authService.getToken();
+    if (token) {
       this.authService.getUser().subscribe({
         next: (data) => this.user = data,
         error: () => this.user = null
@@ -25,6 +28,6 @@ export class NavbarComponent implements OnInit {
   logout(): void {
     this.authService.logout();
     this.user = null;
-    window.location.reload(); // recarga para actualizar visibilidad del navbar
+    window.location.reload(); // actualiza el navbar al cerrar sesión
   }
 }

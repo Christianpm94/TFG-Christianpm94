@@ -22,15 +22,15 @@ export class LoginComponent {
   ) {
     // Se inicializa el formulario con los campos mail y password
     this.loginForm = this.fb.group({
-      mail: [''],
+      email: [''],
       password: ['']
     });
   }
 
   // Método que se ejecuta al enviar el formulario
   onSubmit(): void {
-    const { mail, password } = this.loginForm.value;
-    this.authService.login(mail, password).subscribe({
+    const { email, password } = this.loginForm.value;
+    this.authService.login(email, password).subscribe({
       next: (res) => {
         // Guarda el token en localStorage y redirige al home
         this.authService.saveToken(res.token);

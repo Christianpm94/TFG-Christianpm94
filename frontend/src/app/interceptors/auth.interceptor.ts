@@ -12,6 +12,14 @@ import { HttpInterceptorFn } from '@angular/common/http';
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const token = localStorage.getItem('token');
 
+  // Excluir login y registro del interceptor
+  if (
+    req.url.includes('/login') ||
+    req.url.includes('/register')
+  ) {
+    return next(req); // ← sin añadir token
+  }
+
   if (token) {
     const cloned = req.clone({
       setHeaders: {
@@ -23,4 +31,3 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req);
 };
-
