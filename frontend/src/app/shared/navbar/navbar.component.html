@@ -3,17 +3,20 @@
     ⚽ Football App
   </div>
 
-  <div class="space-x-4 flex items-center text-xl" *ngIf="!user">
-    <a routerLink="/" routerLinkActive="underline" class="hover:underline">Inicio</a>
-    <a routerLink="/login" routerLinkActive="underline" class="hover:underline">Iniciar sesión</a>
-    <a routerLink="/register" routerLinkActive="underline" class="hover:underline">Registrarse</a>
-  </div>
+  <div class="flex gap-4 items-center">
+    <!-- Mostrar si está logueado -->
+    <ng-container *ngIf="user; else noLogueado">
+      <span>Hola, {{ user.name }}</span>
+      <a routerLink="/" class="hover:underline">Inicio</a>
+      <button (click)="logout()" class="bg-red-500 px-3 py-1 rounded hover:bg-red-600">
+        Cerrar sesión
+      </button>
+    </ng-container>
 
-  <div class="space-x-4 flex items-center" *ngIf="user">
-    <span class="font-semibold drop-shadow-md">👤 {{ user.name }} ({{ user.position }})</span>
-    <a routerLink="/create-match" class="hover:underline">Crear partido</a>
-    <button (click)="logout()" class="bg-white text-green-800 font-bold px-3 py-1 rounded hover:bg-gray-200">
-      Cerrar sesión
-    </button>
+    <!-- Mostrar si NO está logueado -->
+    <ng-template #noLogueado>
+      <a routerLink="/login" class="hover:underline">Iniciar sesión</a>
+      <a routerLink="/register" class="hover:underline">Registrarse</a>
+    </ng-template>
   </div>
 </nav>

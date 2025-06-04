@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  // Importamos los módulos necesarios para los formularios y estructuras comunes
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './login.component.html',
 })
@@ -18,26 +18,33 @@ export class LoginComponent {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private toastr: ToastrService
   ) {
-    // Se inicializa el formulario con los campos mail y password
+    // Inicializa el formulario con validaciones
     this.loginForm = this.fb.group({
-      email: [''],
-      password: ['']
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', Validators.required]
     });
   }
 
-  // Método que se ejecuta al enviar el formulario
   onSubmit(): void {
+    if (this.loginForm.invalid) {
+      this.toastr.error('Rellena todos los campos correctamente.', 'Error');
+      return;
+    }
+
     const { email, password } = this.loginForm.value;
+
     this.authService.login(email, password).subscribe({
-      next: (res) => {
-        // Guarda el token en localStorage y redirige al home
-        this.authService.saveToken(res.token);
-        this.router.navigate(['/']);
+      next: () => {
+        // El token ya se guarda y el usuario se carga automáticamente desde AuthService
+        this.router.navigate(['/']).then(() => {
+          // El toast de bienvenida se muestra desde el NavbarComponent
+        });
       },
       error: () => {
-        this.errorMessage = 'Correo o contraseña incorrectos';
+        this.toastr.error('Correo o contraseña incorrectos', 'Error de login');
       }
     });
   }

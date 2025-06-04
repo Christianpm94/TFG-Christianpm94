@@ -1,22 +1,30 @@
+// auth.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, BehaviorSubject } from 'rxjs';
+import { tap } from 'rxjs/operators';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private apiUrl = 'http://localhost:8000/api';
+  private loginUrl = 'http://localhost:8000/login';
 
-  constructor(private http: HttpClient) {}
+  private userSubject = new BehaviorSubject<any>(null);
+  user$ = this.userSubject.asObservable(); // observable para escuchar cambios
 
-  //  Login - retorna el token JWT
-  login(email: string, password: string): Observable<{ token: string }> {
-    return this.http.post<{ token: string }>(`${this.apiUrl}/login`, {
-      email,
-      password,
-    });
+  constructor(private http: HttpClient) {
+    this.loadUser(); // carga inicial si hay token
   }
 
-  //  Registro - crea nuevo usuario
+  login(email: string, password: string): Observable<{ token: string }> {
+    return this.http.post<{ token: string }>(this.loginUrl, { email, password }).pipe(
+      tap((res) => {
+        this.saveToken(res.token);
+        this.loadUser(); // actualiza el usuario al iniciar sesión
+      })
+    );
+  }
+
   register(data: {
     email: string;
     password: string;
@@ -27,22 +35,19 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}/register`, data);
   }
 
-  //  Guarda el token en localStorage
   saveToken(token: string): void {
     localStorage.setItem('token', token);
   }
 
-  //  Obtiene el token
   getToken(): string | null {
     return localStorage.getItem('token');
   }
 
-  //  Borra el token
   logout(): void {
     localStorage.removeItem('token');
+    this.userSubject.next(null); // limpia el observable
   }
 
-  //  Obtiene los datos del usuario actual autenticado
   getUser(): Observable<any> {
     const token = this.getToken();
     const headers = new HttpHeaders({
@@ -51,7 +56,16 @@ export class AuthService {
     return this.http.get(`${this.apiUrl}/users/me`, { headers });
   }
 
-  //  Verifica si el usuario está autenticado
+  loadUser(): void {
+    const token = this.getToken();
+    if (token) {
+      this.getUser().subscribe({
+        next: (user) => this.userSubject.next(user),
+        error: () => this.userSubject.next(null),
+      });
+    }
+  }
+
   isAuthenticated(): boolean {
     return !!this.getToken();
   }
