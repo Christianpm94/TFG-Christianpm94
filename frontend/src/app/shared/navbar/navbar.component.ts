@@ -13,9 +13,9 @@ import { Subscription } from 'rxjs';
   imports: [CommonModule, RouterModule]
 })
 export class NavbarComponent implements OnInit, OnDestroy {
-  user: any = null; // Usuario logueado actualmente
-  private toastShown = false; // Controla si el toast de bienvenida ya se mostró
-  private userSub!: Subscription; // Suscripción al estado del usuario
+  user: any = null;                  // Usuario actualmente logueado
+  private toastShown = false;       // Controla si se ha mostrado el toast de bienvenida
+  private userSub!: Subscription;   // Suscripción al observable de usuario
 
   constructor(
     private authService: AuthService,
@@ -24,19 +24,21 @@ export class NavbarComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // Se suscribe al observable del usuario
+    // Se suscribe al observable del estado del usuario en AuthService
     this.userSub = this.authService.user$.subscribe({
       next: (userData) => {
-        const firstLogin = !this.user && userData; // Detecta primer login
+        const firstLogin = !this.user && userData; // Detecta si es el primer login
         this.user = userData;
 
+        // Mostrar toast de bienvenida una sola vez
         if (firstLogin && !this.toastShown) {
           this.toastr.success(`Bienvenido, ${userData.name}`, 'Sesión iniciada');
           this.toastShown = true;
         }
 
+        // Si el usuario se desloguea, reiniciamos toast
         if (!userData) {
-          this.toastShown = false; // Reinicia si se desloguea
+          this.toastShown = false;
         }
       },
       error: () => {
@@ -46,18 +48,28 @@ export class NavbarComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Cierra la sesión del usuario
+   */
   logout(): void {
-    this.authService.logout();
+    this.authService.logout(); // Limpia token y estado
     this.user = null;
     this.toastShown = false;
+
     this.toastr.info('Sesión cerrada', 'Hasta pronto');
     this.router.navigate(['/login']);
   }
 
+  /**
+   * Verifica si el usuario está autenticado (por si se requiere usar en lógica del template)
+   */
   isAuthenticated(): boolean {
-    return this.authService.isAuthenticated(); // Utilidad para verificar login
+    return this.authService.isAuthenticated();
   }
 
+  /**
+   * Limpieza de la suscripción al destruir el componente
+   */
   ngOnDestroy(): void {
     this.userSub?.unsubscribe();
   }

@@ -4,12 +4,13 @@ import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class MatchService {
-  private apiUrl = 'http://localhost:8000/api'; //  URL base del backend Symfony
+  // URL base del backend Symfony
+  private apiUrl = 'http://localhost:8000/api';
 
   constructor(private http: HttpClient) {}
 
   /**
-   *  Obtiene todos los partidos disponibles desde el backend.
+   * Obtiene todos los partidos disponibles desde el backend.
    * @returns Observable con array de partidos
    */
   getMatches(): Observable<any[]> {
@@ -17,7 +18,7 @@ export class MatchService {
   }
 
   /**
-   *  Obtiene los detalles de un partido específico.
+   * Obtiene los detalles de un partido específico.
    * @param matchId ID del partido a consultar
    * @returns Observable con datos del partido
    */
@@ -26,9 +27,9 @@ export class MatchService {
   }
 
   /**
-   *  Crea un nuevo partido.
+   * Crea un nuevo partido (público o privado).
    * @param matchData Objeto con los campos: type, location, date, isPrivate, code
-   * @returns Observable con respuesta del backend (id y código de acceso)
+   * @returns Observable con la respuesta del backend
    */
   createMatch(matchData: any): Observable<any> {
     const token = localStorage.getItem('token');
@@ -36,14 +37,13 @@ export class MatchService {
       Authorization: `Bearer ${token}`,
     });
 
-    //  Corrección importante: la ruta correcta para crear partidos es `/matches`
     return this.http.post<any>(`${this.apiUrl}/matches`, matchData, { headers });
   }
 
   /**
-   *  Permite al usuario unirse a un partido.
+   * Permite al usuario unirse a un partido.
    * @param matchId ID del partido
-   * @param code Código de acceso si el partido es privado
+   * @param code Código de acceso (si el partido es privado)
    * @returns Observable con la respuesta del backend
    */
   joinMatch(matchId: number, code?: string): Observable<any> {
@@ -52,13 +52,14 @@ export class MatchService {
       Authorization: `Bearer ${token}`,
     });
 
+    // Si el partido es privado, se envía el código en el cuerpo
     const body = code ? { joinCode: code } : {};
 
     return this.http.post(`${this.apiUrl}/matches/${matchId}/players`, body, { headers });
   }
 
   /**
-   *  Elimina un partido (solo el creador puede hacerlo).
+   * Elimina un partido (solo si el usuario es el creador).
    * @param matchId ID del partido a eliminar
    * @returns Observable con respuesta del backend
    */
@@ -72,15 +73,16 @@ export class MatchService {
   }
 
   /**
- * Genera los equipos automáticamente para un partido.
- * @param matchId - ID del partido
- */
-generateTeams(matchId: number): Observable<any> {
-  const token = localStorage.getItem('token');
-  const headers = new HttpHeaders({
-    Authorization: `Bearer ${token}`,
-  });
+   * Genera equipos equilibrados automáticamente para un partido.
+   * @param matchId ID del partido
+   * @returns Observable con los equipos generados
+   */
+  generateTeams(matchId: number): Observable<any> {
+    const token = localStorage.getItem('token');
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`,
+    });
 
-  return this.http.get<any>(`http://localhost:8000/api/matches/${matchId}/generate-teams`, { headers });
-}
+    return this.http.get<any>(`${this.apiUrl}/matches/${matchId}/generate-teams`, { headers });
+  }
 }

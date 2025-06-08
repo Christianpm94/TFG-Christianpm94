@@ -18,7 +18,7 @@ use App\Service\MatchCleanupService;
 class MatchController extends AbstractController
 {
     /**
-     *  Crear un nuevo partido
+     * 🆕 Crear un nuevo partido
      */
     #[Route('/matches', name: 'api_create_match', methods: ['POST'])]
     #[IsGranted('ROLE_USER')]
@@ -49,12 +49,12 @@ class MatchController extends AbstractController
     }
 
     /**
-     * 📋 Obtener todos los partidos (filtrando los expirados)
+     *  Listar todos los partidos disponibles (excepto los expirados)
      */
     #[Route('/matches', name: 'api_list_matches', methods: ['GET'])]
     public function list(FootballMatchRepository $repository, MatchCleanupService $cleanupService): JsonResponse
     {
-        $cleanupService->deleteExpiredMatches(); // elimina partidos pasados
+        $cleanupService->deleteExpiredMatches(); // Limpieza automática de partidos expirados
 
         $user = $this->getUser();
         $matches = $repository->findAll();
@@ -81,6 +81,45 @@ class MatchController extends AbstractController
     }
 
     /**
+     *  Obtener detalles de un partido
+     * Incluye si el usuario está unido y si es el creador
+     */
+    #[Route('/matches/{id}', name: 'api_get_match', methods: ['GET'])]
+    #[IsGranted('ROLE_USER')]
+    public function getMatch(
+        int $id,
+        FootballMatchRepository $matchRepo
+    ): JsonResponse {
+        $match = $matchRepo->find($id);
+
+        if (!$match) {
+            return $this->json(['error' => 'Partido no encontrado'], 404);
+        }
+
+        $user = $this->getUser();
+        $isJoined = false;
+
+        // Verifica si el usuario está en la lista de jugadores
+        foreach ($match->getMatchPlayers() as $mp) {
+            if ($mp->getPlayer() === $user) {
+                $isJoined = true;
+                break;
+            }
+        }
+
+        return $this->json([
+            'id' => $match->getId(),
+            'type' => $match->getType(),
+            'location' => $match->getLocation(),
+            'date' => $match->getDate()->format('Y-m-d H:i'),
+            'isPrivate' => $match->isPrivate(),
+            'creatorId' => $match->getCreatedBy()->getId(),
+            'joined' => $isJoined,
+            'currentUserId' => $user?->getId(),
+        ]);
+    }
+
+    /**
      *  Unirse a un partido
      */
     #[Route('/matches/{id}/players', name: 'api_join_match', methods: ['POST'])]
@@ -95,21 +134,21 @@ class MatchController extends AbstractController
         $match = $matchRepository->find($id);
 
         if (!$match) {
-            return $this->json(['error' => 'Partido no encontrado'], Response::HTTP_NOT_FOUND);
+            return $this->json(['error' => 'Partido no encontrado'], 404);
         }
 
-        // Validar código si es privado
+        // Si el partido es privado, comprobamos el código
         if ($match->isPrivate()) {
             $data = json_decode($request->getContent(), true);
             if (!isset($data['joinCode']) || $data['joinCode'] !== $match->getJoinCode()) {
-                return $this->json(['error' => 'Código inválido'], Response::HTTP_FORBIDDEN);
+                return $this->json(['error' => 'Código inválido'], 403);
             }
         }
 
-        // Verifica si ya está unido
+        // Si ya está unido, evitamos duplicar
         foreach ($match->getMatchPlayers() as $mp) {
             if ($mp->getPlayer() === $user) {
-                return $this->json(['error' => 'Ya estás inscrito'], Response::HTTP_CONFLICT);
+                return $this->json(['error' => 'Ya estás inscrito'], 409);
             }
         }
 
@@ -148,9 +187,8 @@ class MatchController extends AbstractController
             ];
         }
 
-        shuffle($players); // mezcla para aleatoriedad
+        shuffle($players); // mezcla para mayor aleatoriedad
 
-        // Equipos y suma de niveles
         $teamA = [];
         $teamB = [];
         $levelSumA = 0;
@@ -173,7 +211,7 @@ class MatchController extends AbstractController
     }
 
     /**
-     *  Eliminar partido
+     *  Eliminar un partido (solo el creador puede)
      */
     #[Route('/matches/{id}', name: 'api_delete_match', methods: ['DELETE'])]
     #[IsGranted('ROLE_USER')]
@@ -194,4 +232,45 @@ class MatchController extends AbstractController
 
         return $this->json(['message' => 'Partido eliminado correctamente']);
     }
+
+    #[Route('/matches/{id}/add-dummy-players', name: 'api_add_dummy_players', methods: ['POST'])]
+#[IsGranted('ROLE_USER')]
+public function addDummyPlayers(
+    int $id,
+    FootballMatchRepository $matchRepo,
+    EntityManagerInterface $em
+): JsonResponse {
+    $match = $matchRepo->find($id);
+
+    if (!$match) {
+        return $this->json(['error' => 'Partido no encontrado'], 404);
+    }
+
+    // Lista de nombres ficticios
+    $dummyNames = ['Carlos', 'Lucía', 'Pedro', 'María', 'Juan', 'Ana', 'Sergio', 'Elena', 'Javier', 'Laura'];
+    $positions = ['Delantero', 'Defensa', 'Portero', 'Centrocampista'];
+
+    foreach ($dummyNames as $index => $name) {
+        $user = new \App\Entity\User();
+        $user->setName($name);
+        $user->setEmail("dummy{$index}@mail.com");
+        $user->setPassword('dummy'); // No se usará para login
+        $user->setPosition($positions[array_rand($positions)]);
+        $user->setLevel(rand(1, 10));
+        $user->setRoles(['ROLE_USER']);
+
+        $em->persist($user);
+
+        $matchPlayer = new MatchPlayer();
+        $matchPlayer->setPlayer($user);
+        $matchPlayer->setMatch($match);
+        $matchPlayer->setJoinedAt(new \DateTimeImmutable());
+
+        $em->persist($matchPlayer);
+    }
+
+    $em->flush();
+
+    return $this->json(['message' => 'Jugadores ficticios añadidos al partido']);
+}
 }

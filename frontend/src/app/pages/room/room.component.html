@@ -1,7 +1,9 @@
 <div class="max-w-4xl mx-auto mt-10 p-6 bg-white shadow-lg rounded-lg">
   <h2 class="text-2xl font-bold text-center mb-6">Equipos Generados</h2>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <!-- Si ambos equipos tienen jugadores -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6" *ngIf="teamA.length > 0 && teamB.length > 0; else sinEquipos">
+    
     <!-- Equipo A -->
     <div>
       <h3 class="text-xl font-semibold mb-2 text-blue-700">Equipo A</h3>
@@ -22,4 +24,11 @@
       </ul>
     </div>
   </div>
+
+  <!-- Mensaje alternativo si no hay suficientes jugadores -->
+  <ng-template #sinEquipos>
+    <p class="text-center text-gray-600 italic">
+      Aún no hay suficientes jugadores inscritos para generar equipos.
+    </p>
+  </ng-template>
 </div>

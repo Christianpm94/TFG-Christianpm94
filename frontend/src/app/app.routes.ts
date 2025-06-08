@@ -12,10 +12,6 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
   { path: 'create-match', component: CreateMatchComponent, canActivate: [authGuard] },
-  { path: 'match/:id', component: MatchDetailComponent, canActivate: [authGuard] },
+  { path: 'match/:id', component: RoomComponent, canActivate: [authGuard] },
   { path: '**', redirectTo: '' },
-  {
-  path: 'room/:id',
-  loadComponent: () => import('./pages/room/room.component').then(m => m.RoomComponent)
-  }
 ];

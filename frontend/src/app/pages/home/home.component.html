@@ -9,6 +9,7 @@
   <!-- Lista de partidos -->
   <div *ngFor="let match of matches" class="bg-white shadow-md rounded-lg p-4 mb-4">
     
+    <!-- Información del partido -->
     <div class="flex justify-between items-center">
       <div>
         <p><strong>Tipo:</strong> {{ match.type }}</p>
@@ -18,8 +19,8 @@
         <p><strong>Creador:</strong> {{ match.createdBy }}</p>
       </div>
 
-      <!-- Botón eliminar (solo para el creador) -->
-      <div *ngIf="match.createdBy === userId">
+      <!-- Botón de eliminar (solo creador) -->
+      <div *ngIf="isCreator(match)">
         <button 
           (click)="eliminarPartido(match.id)" 
           class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
@@ -28,12 +29,12 @@
       </div>
     </div>
 
-    <!-- Si está inscrito -->
+    <!-- Estado de inscripción -->
     <div *ngIf="isUserInMatch(match)" class="mt-2 text-green-600 font-medium">
       Ya estás inscrito en este partido
     </div>
 
-    <!-- Si no está inscrito y no ha pasado la fecha -->
+    <!-- Unirse al partido (si no inscrito y no expirado) -->
     <div *ngIf="!isUserInMatch(match) && !isExpired(match.date)" class="mt-2">
       <button 
         (click)="unirseAlPartido(match)" 
@@ -42,9 +43,18 @@
       </button>
     </div>
 
-    <!-- Aviso si el partido ya pasó -->
+    <!-- Aviso si el partido expiró -->
     <div *ngIf="isExpired(match.date)" class="mt-2 text-gray-500 italic">
       Partido expirado
+    </div>
+
+    <!-- Botón para ver detalles del partido -->
+    <div class="mt-2">
+      <button 
+        [routerLink]="['/match', match.id]"
+        class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded">
+        Ver Detalles del Partido
+      </button>
     </div>
   </div>
 </div>
