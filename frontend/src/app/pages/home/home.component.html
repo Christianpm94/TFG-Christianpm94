@@ -1,15 +1,50 @@
 <div class="max-w-4xl mx-auto p-6">
-  <h1 class="text-3xl font-bold text-center text-green-700 mb-6">Partidos Disponibles</h1>
+  <h2 class="text-3xl font-bold mb-6 text-center text-gray-800">Partidos disponibles</h2>
 
-  <div *ngIf="matches.length > 0; else noMatches" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-    <div *ngFor="let match of matches" class="bg-white p-4 rounded-lg shadow hover:shadow-lg transition-all">
-      <h3 class="text-lg font-semibold">{{ match.title }}</h3>
-      <p class="text-sm text-gray-700">{{ match.description }}</p>
-      <p class="text-sm text-gray-500">{{ match.date }} a las {{ match.time }}</p>
-    </div>
+  <!-- Si no hay partidos -->
+  <div *ngIf="matches.length === 0" class="text-center text-gray-600">
+    No hay partidos disponibles por el momento.
   </div>
 
-  <ng-template #noMatches>
-    <p class="text-center text-gray-600">No hay partidos disponibles.</p>
-  </ng-template>
+  <!-- Lista de partidos -->
+  <div *ngFor="let match of matches" class="bg-white shadow-md rounded-lg p-4 mb-4">
+    
+    <div class="flex justify-between items-center">
+      <div>
+        <p><strong>Tipo:</strong> {{ match.type }}</p>
+        <p><strong>Ubicación:</strong> {{ match.location }}</p>
+        <p><strong>Fecha:</strong> {{ match.date }}</p>
+        <p><strong>Privado:</strong> {{ match.isPrivate ? 'Sí' : 'No' }}</p>
+        <p><strong>Creador:</strong> {{ match.createdBy }}</p>
+      </div>
+
+      <!-- Botón eliminar (solo para el creador) -->
+      <div *ngIf="match.createdBy === userId">
+        <button 
+          (click)="eliminarPartido(match.id)" 
+          class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+          Eliminar
+        </button>
+      </div>
+    </div>
+
+    <!-- Si está inscrito -->
+    <div *ngIf="isUserInMatch(match)" class="mt-2 text-green-600 font-medium">
+      Ya estás inscrito en este partido
+    </div>
+
+    <!-- Si no está inscrito y no ha pasado la fecha -->
+    <div *ngIf="!isUserInMatch(match) && !isExpired(match.date)" class="mt-2">
+      <button 
+        (click)="unirseAlPartido(match)" 
+        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+        Unirse al Partido
+      </button>
+    </div>
+
+    <!-- Aviso si el partido ya pasó -->
+    <div *ngIf="isExpired(match.date)" class="mt-2 text-gray-500 italic">
+      Partido expirado
+    </div>
+  </div>
 </div>

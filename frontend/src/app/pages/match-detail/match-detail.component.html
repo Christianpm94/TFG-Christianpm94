@@ -1,19 +1,56 @@
-<div class="max-w-xl mx-auto mt-10 p-6 bg-white shadow rounded" *ngIf="match">
-  <h2 class="text-2xl font-bold mb-4">Detalle del Partido</h2>
+<div class="max-w-2xl mx-auto p-6 bg-white rounded shadow">
+  <h2 class="text-2xl font-bold mb-4 text-center">Detalles del Partido</h2>
 
-  <p class="text-gray-700">Tipo: <span class="font-semibold">{{ match.type }}</span></p>
-  <p class="text-gray-700">Lugar: <span class="font-semibold">{{ match.location }}</span></p>
-  <p class="text-gray-700">Fecha: <span class="font-semibold">{{ match.date | date:'medium' }}</span></p>
+  <!-- Si se ha cargado el partido -->
+  <div *ngIf="match">
+    <p><strong>Tipo:</strong> {{ match.type }}</p>
+    <p><strong>Ubicación:</strong> {{ match.location }}</p>
+    <p><strong>Fecha:</strong> {{ match.date }}</p>
+    <p><strong>Privado:</strong> {{ match.isPrivate ? 'Sí' : 'No' }}</p>
 
-  <!-- Formulario visible solo si el partido es privado -->
-  <div class="mt-6" *ngIf="match.private">
-    <label class="block mb-2">Código de acceso (privado)</label>
-    <input [(ngModel)]="accessCode" type="text" class="w-full p-2 border rounded mb-4" />
-    <button (click)="joinMatch()" class="w-full bg-indigo-600 text-white p-2 rounded hover:bg-indigo-700">
-      Unirse al Partido
-    </button>
+    <!-- Botón de eliminación (solo visible si el usuario es el creador) -->
+    <div *ngIf="esCreador()" class="mt-4">
+      <button
+        (click)="eliminarPartido()"
+        class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+      >
+        Eliminar Partido
+      </button>
+    </div>
+
+    <!-- Mostrar campo de código si es privado y el usuario no está unido -->
+    <div *ngIf="!joined" class="mt-4">
+      <div *ngIf="match.isPrivate" class="mb-2">
+        <label class="block text-sm mb-1">Código de acceso:</label>
+        <input
+          [(ngModel)]="joinCode"
+          class="border p-2 w-full rounded"
+          placeholder="Introduce el código"
+        />
+      </div>
+
+      <button
+        (click)="unirse()"
+        class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+      >
+        Unirse al Partido
+      </button>
+    </div>
+
+    <!-- Confirmación si ya está unido -->
+    <div *ngIf="joined" class="mt-4 text-green-600 font-semibold">
+      Ya estás inscrito en este partido
+    </div>
+  </div>
+
+  <!-- Si no se encuentra el partido -->
+  <div *ngIf="!match" class="text-center text-red-500">
+    No se encontró el partido.
   </div>
 </div>
 
-<!-- Mensaje de error si no se pudo cargar el partido -->
-<div *ngIf="errorMessage" class="text-red-600 text-center mt-6">{{ errorMessage }}</div>
+<!-- Botón para ir a sala -->
+<a [routerLink]="['/room', match.id]" *ngIf="joined"
+   class="inline-block mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+  Ir a la Sala del Partido
+</a>

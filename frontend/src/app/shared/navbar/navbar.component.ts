@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-navbar',
@@ -11,9 +12,10 @@ import { ToastrService } from 'ngx-toastr';
   styleUrls: [],
   imports: [CommonModule, RouterModule]
 })
-export class NavbarComponent implements OnInit {
-  user: any = null;
-  private toastShown = false;
+export class NavbarComponent implements OnInit, OnDestroy {
+  user: any = null; // Usuario logueado actualmente
+  private toastShown = false; // Controla si el toast de bienvenida ya se mostró
+  private userSub!: Subscription; // Suscripción al estado del usuario
 
   constructor(
     private authService: AuthService,
@@ -22,14 +24,19 @@ export class NavbarComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.authService.user$.subscribe({
+    // Se suscribe al observable del usuario
+    this.userSub = this.authService.user$.subscribe({
       next: (userData) => {
-        const firstLogin = !this.user && userData;
+        const firstLogin = !this.user && userData; // Detecta primer login
         this.user = userData;
 
         if (firstLogin && !this.toastShown) {
           this.toastr.success(`Bienvenido, ${userData.name}`, 'Sesión iniciada');
           this.toastShown = true;
+        }
+
+        if (!userData) {
+          this.toastShown = false; // Reinicia si se desloguea
         }
       },
       error: () => {
@@ -46,4 +53,13 @@ export class NavbarComponent implements OnInit {
     this.toastr.info('Sesión cerrada', 'Hasta pronto');
     this.router.navigate(['/login']);
   }
+
+  isAuthenticated(): boolean {
+    return this.authService.isAuthenticated(); // Utilidad para verificar login
+  }
+
+  ngOnDestroy(): void {
+    this.userSub?.unsubscribe();
+  }
 }
+

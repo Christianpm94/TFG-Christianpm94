@@ -12,11 +12,15 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use App\Service\MatchCleanupService;
 
-#[Route('/matches')]
+#[Route('/api', name: 'api_')]
 class MatchController extends AbstractController
 {
-    #[Route('', name: 'create_match', methods: ['POST'])]
+    /**
+     *  Crear un nuevo partido
+     */
+    #[Route('/matches', name: 'api_create_match', methods: ['POST'])]
     #[IsGranted('ROLE_USER')]
     public function create(Request $request, EntityManagerInterface $em): JsonResponse
     {
@@ -31,7 +35,7 @@ class MatchController extends AbstractController
         $match->setLocation($data['location']);
         $match->setDate(new \DateTimeImmutable($data['date']));
         $match->setIsPrivate($data['isPrivate']);
-        $match->setJoinCode($data['isPrivate'] ? bin2hex(random_bytes(4)) : null);
+        $match->setJoinCode($data['isPrivate'] ? ($data['code'] ?? bin2hex(random_bytes(4))) : null);
         $match->setCreatedBy($this->getUser());
 
         $em->persist($match);
@@ -44,11 +48,15 @@ class MatchController extends AbstractController
         ], 201);
     }
 
-    #[Route('', name: 'list_matches', methods: ['GET'])]
-    public function list(FootballMatchRepository $repository): JsonResponse
+    /**
+     * 📋 Obtener todos los partidos (filtrando los expirados)
+     */
+    #[Route('/matches', name: 'api_list_matches', methods: ['GET'])]
+    public function list(FootballMatchRepository $repository, MatchCleanupService $cleanupService): JsonResponse
     {
-        $user = $this->getUser();
+        $cleanupService->deleteExpiredMatches(); // elimina partidos pasados
 
+        $user = $this->getUser();
         $matches = $repository->findAll();
 
         $result = array_map(function (FootballMatch $match) use ($user) {
@@ -59,14 +67,23 @@ class MatchController extends AbstractController
                 'date' => $match->getDate()->format('Y-m-d H:i'),
                 'isPrivate' => $match->isPrivate(),
                 'createdBy' => $match->getCreatedBy()->getEmail(),
-                'canJoin' => !$match->isPrivate() || ($user && $match->getCreatedBy() === $user)
+                'canJoin' => !$match->isPrivate() || ($user && $match->getCreatedBy() === $user),
+                'players' => $match->getMatchPlayers()->map(function ($mp) {
+                    return [
+                        'id' => $mp->getPlayer()->getId(),
+                        'name' => $mp->getPlayer()->getName()
+                    ];
+                })->toArray()
             ];
         }, $matches);
 
         return $this->json($result);
     }
 
-    #[Route('/{id}/join', name: 'join_match', methods: ['POST'])]
+    /**
+     *  Unirse a un partido
+     */
+    #[Route('/matches/{id}/players', name: 'api_join_match', methods: ['POST'])]
     #[IsGranted('ROLE_USER')]
     public function join(
         int $id,
@@ -81,18 +98,18 @@ class MatchController extends AbstractController
             return $this->json(['error' => 'Partido no encontrado'], Response::HTTP_NOT_FOUND);
         }
 
-        // Validar clave si es privado
+        // Validar código si es privado
         if ($match->isPrivate()) {
             $data = json_decode($request->getContent(), true);
             if (!isset($data['joinCode']) || $data['joinCode'] !== $match->getJoinCode()) {
-                return $this->json(['error' => 'Código inválido para partido privado'], Response::HTTP_FORBIDDEN);
+                return $this->json(['error' => 'Código inválido'], Response::HTTP_FORBIDDEN);
             }
         }
 
-        // Verificar si ya está inscrito
+        // Verifica si ya está unido
         foreach ($match->getMatchPlayers() as $mp) {
             if ($mp->getPlayer() === $user) {
-                return $this->json(['error' => 'Ya estás inscrito en este partido'], Response::HTTP_CONFLICT);
+                return $this->json(['error' => 'Ya estás inscrito'], Response::HTTP_CONFLICT);
             }
         }
 
@@ -107,72 +124,74 @@ class MatchController extends AbstractController
         return $this->json(['message' => 'Te has unido al partido']);
     }
 
-    #[Route('/{id}/players', name: 'match_players', methods: ['GET'])]
-public function players(int $id, FootballMatchRepository $matchRepo): JsonResponse
-{
-    $match = $matchRepo->find($id);
+    /**
+     *  Generar equipos equilibrados
+     */
+    #[Route('/matches/{id}/generate-teams', name: 'generate_teams', methods: ['GET'])]
+    #[IsGranted('ROLE_USER')]
+    public function generateTeams(int $id, FootballMatchRepository $matchRepo): JsonResponse
+    {
+        $match = $matchRepo->find($id);
 
-    if (!$match) {
-        return $this->json(['error' => 'Partido no encontrado'], 404);
-    }
-
-    $players = $match->getMatchPlayers()->map(function ($matchPlayer) {
-        $user = $matchPlayer->getPlayer();
-        return [
-            'name' => $user->getName(),
-            'email' => $user->getEmail(),
-            'position' => $user->getPosition(),
-            'level' => $user->getLevel(),
-        ];
-    });
-
-    return $this->json($players);
-}
-
-#[Route('/{id}/generate-teams', name: 'generate_teams', methods: ['GET'])]
-#[IsGranted('ROLE_USER')]
-public function generateTeams(int $id, FootballMatchRepository $matchRepo): JsonResponse
-{
-    $match = $matchRepo->find($id);
-
-    if (!$match) {
-        return $this->json(['error' => 'Partido no encontrado'], 404);
-    }
-
-    $players = [];
-
-    foreach ($match->getMatchPlayers() as $mp) {
-        $user = $mp->getPlayer();
-        $players[] = [
-            'name' => $user->getName(),
-            'position' => $user->getPosition(),
-            'level' => $user->getLevel(),
-        ];
-    }
-
-    // Mezclar jugadores para mayor aleatoriedad
-    shuffle($players);
-
-    // Inicializar equipos
-    $teamA = [];
-    $teamB = [];
-    $levelSumA = 0;
-    $levelSumB = 0;
-
-    foreach ($players as $p) {
-        if ($levelSumA <= $levelSumB) {
-            $teamA[] = $p;
-            $levelSumA += $p['level'];
-        } else {
-            $teamB[] = $p;
-            $levelSumB += $p['level'];
+        if (!$match) {
+            return $this->json(['error' => 'Partido no encontrado'], 404);
         }
+
+        $players = [];
+
+        foreach ($match->getMatchPlayers() as $mp) {
+            $user = $mp->getPlayer();
+            $players[] = [
+                'name' => $user->getName(),
+                'position' => $user->getPosition(),
+                'level' => $user->getLevel(),
+            ];
+        }
+
+        shuffle($players); // mezcla para aleatoriedad
+
+        // Equipos y suma de niveles
+        $teamA = [];
+        $teamB = [];
+        $levelSumA = 0;
+        $levelSumB = 0;
+
+        foreach ($players as $p) {
+            if ($levelSumA <= $levelSumB) {
+                $teamA[] = $p;
+                $levelSumA += $p['level'];
+            } else {
+                $teamB[] = $p;
+                $levelSumB += $p['level'];
+            }
+        }
+
+        return $this->json([
+            'teamA' => $teamA,
+            'teamB' => $teamB
+        ]);
     }
 
-    return $this->json([
-        'teamA' => $teamA,
-        'teamB' => $teamB
-    ]);
-}
+    /**
+     *  Eliminar partido
+     */
+    #[Route('/matches/{id}', name: 'api_delete_match', methods: ['DELETE'])]
+    #[IsGranted('ROLE_USER')]
+    public function delete(int $id, FootballMatchRepository $repo, EntityManagerInterface $em): JsonResponse
+    {
+        $match = $repo->find($id);
 
+        if (!$match) {
+            return $this->json(['error' => 'Partido no encontrado'], 404);
+        }
+
+        if ($match->getCreatedBy() !== $this->getUser()) {
+            return $this->json(['error' => 'No autorizado'], 403);
+        }
+
+        $em->remove($match);
+        $em->flush();
+
+        return $this->json(['message' => 'Partido eliminado correctamente']);
+    }
 }

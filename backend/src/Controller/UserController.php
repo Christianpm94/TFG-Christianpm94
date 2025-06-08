@@ -12,7 +12,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Security\Core\User\UserInterface;
 
-#[Route('/api')]
+#[Route('/api')] // Prefijo para todas las rutas de este controlador
 class UserController extends AbstractController
 {
     #[Route('/register', name: 'user_register', methods: ['POST'])]
@@ -27,6 +27,7 @@ class UserController extends AbstractController
             return new JsonResponse(['error' => 'Datos no válidos.'], 400);
         }
 
+        // Crear nuevo usuario
         $user = new User();
         $user->setEmail($data['email']);
         $user->setName($data['name']);
@@ -34,9 +35,11 @@ class UserController extends AbstractController
         $user->setLevel((int) $data['level']);
         $user->setRoles(['ROLE_USER']);
 
+        // Hashear contraseña
         $hashedPassword = $passwordHasher->hashPassword($user, $data['password']);
         $user->setPassword($hashedPassword);
 
+        // Guardar en base de datos
         $em->persist($user);
         $em->flush();
 
@@ -44,9 +47,10 @@ class UserController extends AbstractController
     }
 
     #[Route('/users/me', name: 'user_me', methods: ['GET'])]
-    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')] // Protegida por JWT
     public function getCurrentUser(UserInterface $user): JsonResponse
     {
+        // Retornar datos del usuario autenticado
         return new JsonResponse([
             'id' => $user->getId(),
             'email' => $user->getEmail(),

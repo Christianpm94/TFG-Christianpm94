@@ -1,47 +1,67 @@
 import { Component } from '@angular/core';
-import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
-import { MatchService } from '../../services/match.service';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { MatchService } from '../../services/match.service';
+import { Router, RouterModule } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-create-match',
   standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, RouterModule],
   templateUrl: './create-match.component.html',
-  styleUrl: './create-match.component.scss',
-  imports: [CommonModule, ReactiveFormsModule]
 })
 export class CreateMatchComponent {
   matchForm: FormGroup;
+  loading = false;
 
-  constructor(private fb: FormBuilder, private matchService: MatchService) {
-    // Inicialización del formulario con los campos necesarios
+  constructor(
+    private fb: FormBuilder,
+    private matchService: MatchService,
+    private toastr: ToastrService,
+    private router: Router
+  ) {
     this.matchForm = this.fb.group({
-      type: ['Fútbol Sala (Parqué)'],
-      location: [''],
-      datetime: [''],
-      isPrivate: [false]
+      type: ['', Validators.required],
+      location: ['', Validators.required],
+      date: ['', Validators.required],
+      isPrivate: [false],
+      code: [''] // solo se usará si isPrivate es true
     });
   }
 
-  // Función que se ejecuta al enviar el formulario
   onSubmit(): void {
-    const formData = this.matchForm.value;
+    if (this.matchForm.invalid) {
+      this.toastr.error('Por favor completa todos los campos', 'Error');
+      return;
+    }
 
-    // Formatear datos si es necesario (por ejemplo, convertir fecha a formato ISO)
+    this.loading = true;
+    const formValue = this.matchForm.value;
+
     const matchData = {
-      type: formData.type,
-      location: formData.location,
-      datetime: formData.datetime,
-      isPrivate: formData.isPrivate
+      type: formValue.type,
+      location: formValue.location,
+      date: formValue.date,
+      isPrivate: formValue.isPrivate,
+      code: formValue.isPrivate ? formValue.code : null
     };
 
     this.matchService.createMatch(matchData).subscribe({
-      next: response => {
-        console.log('Partido creado con éxito:', response);
-        // Aquí podrías redirigir a otra página, por ejemplo al listado o detalle
+      next: (res: any) => {
+        this.toastr.success('Partido creado correctamente', 'Éxito');
+
+        if (res.joinCode) {
+          this.toastr.info(`Código de acceso: ${res.joinCode}`, 'Partido privado');
+        }
+
+        this.router.navigate(['/match', res.id]);
       },
-      error: err => {
-        console.error('Error al crear partido:', err);
+      error: () => {
+        this.toastr.error('Hubo un error al crear el partido', 'Error');
+      },
+      complete: () => {
+        this.loading = false;
       }
     });
   }

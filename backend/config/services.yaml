@@ -1,24 +1,24 @@
-# This file is the entry point to configure your own services.
-# Files in the packages/ subdirectory configure your dependencies.
+# config/services.yaml
 
-# Put parameters here that don't need to change on each machine where the app is deployed
-# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+  # Puedes definir parámetros globales aquí si los necesitas
 
 services:
-    # default configuration for services in *this* file
-    _defaults:
-        autowire: true      # Automatically injects dependencies in your services.
-        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+  _defaults:
+    autowire: true      # Symfony intentará inyectar automáticamente las dependencias requeridas
+    autoconfigure: true # Symfony registrará automáticamente servicios como comandos, eventos, etc.
 
-    # makes classes in src/ available to be used as services
-    # this creates a service per class whose id is the fully-qualified class name
-    App\:
-        resource: '../src/'
-        exclude:
-            - '../src/DependencyInjection/'
-            - '../src/Entity/'
-            - '../src/Kernel.php'
+  # Registro automático de todos los servicios (controladores, repositorios, servicios, etc.)
+  App\:
+    resource: '../src/'
+    exclude:
+      - '../src/DependencyInjection/'
+      - '../src/Entity/'
+      - '../src/Kernel.php'
 
-    # add more service definitions when explicit configuration is needed
-    # please note that last definitions always *replace* previous ones
+  # Asegúrate de que Symfony pueda encontrar tus controladores correctamente
+  # Simplemente registramos la carpeta de los controladores sin necesidad de 'type: attribute'
+  App\Controller\:
+    resource: '../src/Controller/'
+    exclude:
+      - '../src/Controller/SomeExcludedController.php' # Si deseas excluir algunos controladores específicos

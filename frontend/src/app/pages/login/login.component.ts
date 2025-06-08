@@ -1,9 +1,12 @@
+// src/app/pages/login/login.component.ts
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ToastrService } from 'ngx-toastr';
+import { switchMap } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 @Component({
   selector: 'app-login',
@@ -36,12 +39,16 @@ export class LoginComponent {
 
     const { email, password } = this.loginForm.value;
 
-    this.authService.login(email, password).subscribe({
-      next: () => {
-        // El token ya se guarda y el usuario se carga automáticamente desde AuthService
-        this.router.navigate(['/']).then(() => {
-          // El toast de bienvenida se muestra desde el NavbarComponent
-        });
+    // ✅ Esperamos a que el usuario se cargue antes de redirigir
+    this.authService.login(email, password).pipe(
+      switchMap(() => {
+        return this.authService.user$; // Esperamos el usuario cargado
+      })
+    ).subscribe({
+      next: (user) => {
+        if (user) {
+          this.router.navigate(['/']);
+        }
       },
       error: () => {
         this.toastr.error('Correo o contraseña incorrectos', 'Error de login');

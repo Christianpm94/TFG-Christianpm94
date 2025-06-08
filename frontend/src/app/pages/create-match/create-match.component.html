@@ -1,24 +1,40 @@
-<div class="max-w-lg mx-auto mt-10 p-6 bg-white shadow rounded">
+<div class="max-w-xl mx-auto p-6 bg-white rounded shadow">
   <h2 class="text-2xl font-bold mb-4">Crear Partido</h2>
-  <form [formGroup]="matchForm" (ngSubmit)="onSubmit()">
-    <label class="block mb-2">Tipo de Fútbol</label>
-    <select formControlName="type" class="w-full p-2 border rounded mb-4">
-      <option value="Fútbol Sala (Parqué)">Fútbol Sala (Parqué)</option>
-      <option value="Fútbol 7 (Césped)">Fútbol 7 (Césped)</option>
-      <option value="Fútbol 11 (Césped)">Fútbol 11 (Césped)</option>
+
+  <form [formGroup]="matchForm" (ngSubmit)="onSubmit()" class="space-y-4">
+
+    <!-- Tipo de partido -->
+    <select formControlName="type" class="w-full border p-2 rounded">
+      <option value="">Selecciona el tipo de partido</option>
+      <option value="sala">Fútbol sala (10 + 2 cambios)</option>
+      <option value="futbol7">Fútbol 7 (14 + 2 cambios)</option>
+      <option value="futbol11">Fútbol 11 (22 + 4 cambios)</option>
     </select>
 
-    <label class="block mb-2">Localización</label>
-    <input formControlName="location" type="text" class="w-full p-2 border rounded mb-4" />
+    <!-- Ubicación -->
+    <input type="text" formControlName="location" placeholder="Ubicación" class="w-full border p-2 rounded" />
 
-    <label class="block mb-2">Fecha y hora</label>
-    <input formControlName="datetime" type="datetime-local" class="w-full p-2 border rounded mb-4" />
+    <!-- Fecha y hora -->
+    <input type="datetime-local" formControlName="date" class="w-full border p-2 rounded" />
 
-    <label class="block mb-2">¿Partido privado?</label>
-    <input formControlName="isPrivate" type="checkbox" />
+    <!-- Checkbox de privado -->
+    <label class="flex items-center gap-2">
+      <input type="checkbox" formControlName="isPrivate" />
+      Partido privado
+    </label>
 
-    <button type="submit" class="mt-4 w-full bg-emerald-600 text-white p-2 rounded hover:bg-emerald-700">
-      Crear
+    <!-- Campo para código solo si es privado -->
+    <div *ngIf="matchForm.get('isPrivate')?.value">
+      <input type="text" formControlName="code" placeholder="Código de acceso" class="w-full border p-2 rounded" />
+    </div>
+
+    <!-- Botón de crear -->
+    <button 
+      type="submit" 
+      [disabled]="loading" 
+      class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+      {{ loading ? 'Creando...' : 'Crear' }}
     </button>
+
   </form>
 </div>

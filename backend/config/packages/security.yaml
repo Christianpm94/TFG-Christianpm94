@@ -1,51 +1,58 @@
 
 security:
-    password_hashers:
-        App\Entity\User:
-            algorithm: auto
+  # Hasher para contraseñas de la entidad User
+  password_hashers:
+    App\Entity\User:
+      algorithm: auto
 
-    providers:
-        app_user_provider:
-            entity:
-                class: App\Entity\User
-                property: email
+  providers:
+    # Symfony busca usuarios por su email desde la entidad User
+    app_user_provider:
+      entity:
+        class: App\Entity\User
+        property: email
 
-    firewalls:
-        # Dev: sin seguridad en rutas de desarrollo
-        dev:
-            pattern: ^/(_(profiler|wdt)|css|images|js)/
-            security: false
+  firewalls:
+    # Desactiva seguridad en rutas de desarrollo y assets
+    dev:
+      pattern: ^/(_(profiler|wdt)|css|images|js)/
+      security: false
 
-        # Login con JSON
-        login:
-            pattern: ^/login
-            stateless: true
-            json_login:
-                check_path: /login
-                username_path: email
-                password_path: password
-                success_handler: lexik_jwt_authentication.handler.authentication_success
-                failure_handler: lexik_jwt_authentication.handler.authentication_failure
+    # Login por JSON con LexikJWTAuthenticationBundle
+    login:
+      pattern: ^/login
+      stateless: true
+      json_login:
+        check_path: /login
+        username_path: email
+        password_path: password
+        success_handler: lexik_jwt_authentication.handler.authentication_success
+        failure_handler: lexik_jwt_authentication.handler.authentication_failure
 
-        # Resto de la aplicación: protegida con JWT
-        main:
-            stateless: true
-            provider: app_user_provider
-            jwt: ~
+    # Firewall principal para todo lo demás
+    main:
+      stateless: true
+      provider: app_user_provider
+      jwt: ~ # ← Requiere token JWT para acceder
 
-    access_control:
-        - { path: ^/api/register, roles: PUBLIC_ACCESS }
-        - { path: ^/api/users/me, roles: IS_AUTHENTICATED_FULLY }
-        - { path: ^/api/login, roles: PUBLIC_ACCESS }
-        - { path: ^/register, roles: PUBLIC_ACCESS }
-        - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
-        - { path: ^/matches, roles: IS_AUTHENTICATED_FULLY }
+  access_control:
+    # Acceso público al registro y login
+    - { path: ^/api/register, roles: PUBLIC_ACCESS }
+    - { path: ^/api/users/me, roles: IS_AUTHENTICATED_FULLY }
+    - { path: ^/api/login, roles: PUBLIC_ACCESS }
+    - { path: ^/register, roles: PUBLIC_ACCESS }
+
+    # Requiere autenticación para el resto de rutas /api
+    - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
+
+    # Seguridad extra si tienes rutas sin prefijo /api
+    - { path: ^/matches, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
-    security:
-        password_hashers:
-            App\Entity\User:
-                algorithm: auto
-                cost: 4
-                time_cost: 3
-                memory_cost: 10
+  security:
+    password_hashers:
+      App\Entity\User:
+        algorithm: auto
+        cost: 4
+        time_cost: 3
+        memory_cost: 10
